@@ -137,12 +137,13 @@ class XMLParser
 
     /**
      * @param \DOMElement $e
-     * @return array
+     * @return array | null
      */
     private function parseDocumentElement(\DOMElement $e){
 
         $this->currentDepth++;
         $a = [];
+        $k = 0;
 
         if($this->currentDepth <= $this->maxDepth) {
 
@@ -152,7 +153,7 @@ class XMLParser
 
                     $childs = $e->childNodes;
 
-                    if($childs->length > 1) {
+                    if($childs->length > 0) {
 
                         /** ---------------------------------------------------------------------------------------  \
                          *                                  EXTRACT RESULTS
@@ -162,8 +163,13 @@ class XMLParser
                         foreach ($childs as $child) {
 
                             if ($child->nodeType != 3) {
-                                //$values = $this->parseDocumentElement($child);
-                                $a[$e->localName][] = $this->parseDocumentElement($child);
+                                $res = $this->parseDocumentElement($child);
+                                if(empty($res)){
+                                    $a[$e->localName][] = [$child->localName => $child->nodeValue];
+                                } else {
+                                    $a[$e->localName][] = $res;
+                                }
+                                $k++;
                             }
 
                         }
@@ -221,10 +227,6 @@ class XMLParser
                         $this->currentDepth--;
                         return $a;
 
-                    } else {
-                        $a[$e->localName] = $e->nodeValue;
-                        $this->currentDepth--;
-                        return $a;
                     }
 
                 }
@@ -238,9 +240,9 @@ class XMLParser
         }
 
         $this->currentDepth--;
+        if($k==0) $a = null;
         return $a;
 
     }
-
 
 }
